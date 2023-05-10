@@ -4,6 +4,11 @@ use rusty_engine::prelude::*;
 fn main() {
     let mut game = Game::new();
 
+    game.window_settings(WindowDescriptor {
+        title: "Tutorial".to_string(),
+        ..Default::default()
+    });
+
     game.audio_manager
         .play_music(MusicPreset::WhimsicalPopsicle, 0.1);
 
@@ -39,6 +44,20 @@ impl Default for GameState {
     }
 }
 fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
+    //Q exit
+    if engine.keyboard_state.just_pressed(KeyCode::Q) {
+        engine.should_exit = true;
+    }
+
+    //dynamically resize text
+    let offset = ((engine.time_since_startup_f64 * 3.0).cos() * 5.0) as f32;
+    let score = engine.texts.get_mut("score").unwrap();
+    score.translation.x = engine.window_dimensions.x / 2.0 - 100.0;
+    score.translation.y = engine.window_dimensions.y / 2.0 - 30.0 + offset;
+    let high_score = engine.texts.get_mut("high_score").unwrap();
+    high_score.translation.x = -engine.window_dimensions.x / 2.0 + 80.0;
+    high_score.translation.y = engine.window_dimensions.y / 2.0 - 30.0;
+
     for event in engine.collision_events.drain(..) {
         if event.state == CollisionState::Begin && event.pair.one_starts_with("player") {
             for label in [event.pair.0, event.pair.1] {

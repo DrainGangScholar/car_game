@@ -1,11 +1,6 @@
-use std::f32::consts::E;
+use rand::prelude::*;
 
 use rusty_engine::prelude::*;
-const BACKGROUND_LAYER: f32 = 0.0;
-const CHARACTER_LAYER: f32 = 1.0;
-const EFFECTS_LAYER: f32 = 2.0;
-const UI_BOTTOM_LAYER: f32 = 3.0;
-const UI_TOP_LAYER: f32 = 4.0;
 fn main() {
     let mut game = Game::new();
 
@@ -18,7 +13,7 @@ fn main() {
     player.scale = 1.0;
     player.collision = true;
 
-    let score = game.add_text("score", "Score:0");
+    let score = game.add_text("score", "Score: 0");
     score.translation = Vec2::new(520.0, 320.0);
 
     let high_score = game.add_text("high_score", "High Score:0");
@@ -31,15 +26,15 @@ struct GameState {
     high_score: u32,
     score: u32,
     barrel_index: u32,
-    // spawn_timer: Timer,
+    spawn_timer: Timer,
 }
 impl Default for GameState {
     fn default() -> Self {
         Self {
             high_score: 0,
-            score: 0,
+            score: 1,
             barrel_index: 0,
-            // spawn_timer: Timer::from_seconds(1.0, false),
+            spawn_timer: Timer::from_seconds(2.0, true),
         }
     }
 }
@@ -60,7 +55,7 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
                 }
             }
             game_state.score += 1;
-            format!("Current score: {}", game_state.score);
+            format!("Current score: {}", game_state.score + 1);
         }
     }
     //handle movement
@@ -100,8 +95,17 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
             barrel.collision = true;
         }
     }
+    if game_state.spawn_timer.tick(engine.delta).just_finished() {
+        let label = format!("barrel{}", game_state.barrel_index);
+        game_state.barrel_index += 1;
+        let barrel = engine.add_sprite(label, SpritePreset::RacingBarrierRed); //label.clone()??
+        barrel.translation.x = thread_rng().gen_range(-550.0..550.0);
+        barrel.translation.y = thread_rng().gen_range(-325.0..325.0);
+        barrel.collision = true;
+    }
+    //reset score
     if engine.keyboard_state.just_pressed(KeyCode::R) {
-        game_state.score = 0;
+        game_state.score = 1;
         let score = engine.texts.get_mut("score").unwrap();
         score.value = "Score: 0".to_string();
     }
